@@ -47,6 +47,7 @@ class ConnectionMonit:
         self.notifier_email = NotifyEmail()
         self.notifier_telegram = TelegramBot()
 
+        self.main_loop = None
         self.status_thread = None
         self.status_thread_last_check = 0
         self.last_con_status = None
@@ -203,12 +204,13 @@ class ConnectionMonit:
 
         # Async switch
         try:
-            loop = asyncio.get_running_loop()
+            self.main_loop = asyncio.get_event_loop()
         except Exception as e:
-            loop = asyncio.new_event_loop()
+            self.main_loop = asyncio.new_event_loop()
+            logger.info(f'Created new runloop {self.main_loop}')
 
-        loop.set_debug(True)
-        loop.run_until_complete(self.main_async())
+        self.main_loop.set_debug(True)
+        self.main_loop.run_until_complete(self.main_async())
         self.is_running = False
 
     async def main_async(self):
@@ -292,8 +294,8 @@ class ConnectionMonit:
         await self.notifier_telegram.send_telegram_notif(notif)
 
     def send_telegram_notif_on_main(self, notif):
-        coro = self.send_telegram_notif(notif)
-        self.asyncWorker.enqueue(coro)
+        # asyncio.run_coroutine_threadsafe(self.send_telegram_notif(notif), self.main_loop)
+        self.asyncWorker.enqueue_on_main(self.send_telegram_notif(notif), self.main_loop)
 
     def add_log(self, msg, mtype='-'):
         time_fmt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
