@@ -2,7 +2,7 @@
 # /etc/systemd/system/ph4connmon.service
 # -----------------------------------------
 [Unit]
-Description=ph4conmon
+Description=ph4connmon
 After=network.target
 After=nut-server.service
 
@@ -16,9 +16,9 @@ Type=simple
 Environment=DNS_PUBLIC=tcp
 Environment=TORSOCKS_ALLOW_INBOUND=1
 
-ExecStart=/home/tunnel/mon/ph4conmon.sh
-StandardOutput=append:/var/log/ph4conmon.log
-StandardError=append:/var/log/ph4conmon.log
+ExecStart=/home/tunnel/mon/ph4connmon.sh
+StandardOutput=append:/var/log/ph4connmon.log
+StandardError=append:/var/log/ph4connmon.log
 # Another alternative for logging is to execute ExecStart as /bin/bash -c ""
 
 RestartSec=5
