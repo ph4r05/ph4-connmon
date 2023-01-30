@@ -404,7 +404,7 @@ class ConnectionMonit:
 
                 if is_open and is_http:
                     http_resp = try_fnc(lambda: str(open_data.decode().strip())[:50])
-                    check_res['app'] = http_resp.startswith('HTTP')
+                    check_res['app'] = try_fnc(http_resp.startswith('HTTP'))
 
                 if not is_open[0]:
                     r['check_pass'] = False
