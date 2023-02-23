@@ -16,7 +16,7 @@ Type=simple
 Environment=DNS_PUBLIC=tcp
 Environment=TORSOCKS_ALLOW_INBOUND=1
 
-ExecStart=/home/tunnel/mon/ph4connmon.sh
+ExecStart=/home/tunnel/mon/ph4connmon.sh --log /var/log/ph4connmon.json
 StandardOutput=append:/var/log/ph4connmon.log
 StandardError=append:/var/log/ph4connmon.log
 # Another alternative for logging is to execute ExecStart as /bin/bash -c ""

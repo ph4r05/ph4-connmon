@@ -12,6 +12,9 @@ chown tunnel:tunnel /home/tunnel/mon/mon-config.json
 cp ph4connmon.sh /home/tunnel/mon
 chmod 0755 /home/tunnel/mon/ph4connmon.sh
 
+touch /var/log/ph4connmon.json
+chown tunnel:tunnel /var/log/ph4connmon.json
+
 cp ph4connmon.service /etc/systemd/system/ph4connmon.service
 systemctl daemon-reload
 

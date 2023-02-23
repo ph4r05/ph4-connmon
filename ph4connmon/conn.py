@@ -56,7 +56,7 @@ class ConnectionMonit:
 
         self.last_conn_report_txt = None
         self.last_conn_status_change = 0
-        self.last_bat_report = 0
+        self.time_last_report = 0
         self.last_norm_report = 0
 
         self.event_log_deque = collections.deque([], 5_000)
@@ -76,6 +76,8 @@ class ConnectionMonit:
                             help='Allowed user IDs')
         parser.add_argument('-t', '--chat-id', dest='chat_ids', nargs=argparse.ZERO_OR_MORE, type=int,
                             help='Pre-Registered chat IDs')
+        parser.add_argument('-l', '--log', dest='json_log',
+                            help='File where to store JSON logs from events')
         return parser
 
     def load_config(self):
@@ -323,8 +325,14 @@ class ConnectionMonit:
             self.last_conn_status_change = t
             do_report = True
 
-            msg = f'Conn state report [age={"%.2f" % (t - self.last_bat_report)}]: \n{report_extended}'
+            msg = f'Conn state report [age={"%.2f" % (t - self.time_last_report)}]: \n{report_extended}'
             self.add_log(msg, mtype='conn-change')
+            self.add_log_rec({
+                'evt': 'con-event',
+                'report_ext': report_extended,
+                'state': r,
+                'time_last_report': self.time_last_report,
+            })
 
         # if self.is_on_bat:
         #     t_diff = t - self.last_bat_report
@@ -338,7 +346,7 @@ class ConnectionMonit:
             self.send_telegram_notif_on_main(txt_msg)
             if do_report and self.do_email_reports:
                 self.notify_via_email_async(txt_msg, f'Conn change {datetime.now().strftime("%m/%d/%Y, %H:%M:%S")}')
-            self.last_bat_report = t
+            self.time_last_report = t
 
     def notify_via_email_async(self, txt_message: str, subject: str):
         self.worker.enqueue(lambda: self.notify_via_email(txt_message, subject))
@@ -430,6 +438,22 @@ class ConnectionMonit:
                        f'open: {defvalkey(check_res, "open", False)}{attempts}, '
                        f'app: {defvalkey(check_res, "app", "?")}{elapsed}')
         return "\n".join(acc)
+
+    def add_log_rec(self, rec):
+        time_fmt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        time_now = time.time()
+        return self.add_log_line(json.dumps({
+            'time': time_now,
+            'time_fmt': time_fmt,
+            **rec,
+        }))
+
+    def add_log_line(self, line):
+        if not self.args.json_log:
+            return
+        with open(self.args.json_log, 'a+') as fh:
+            fh.write(line)
+            fh.write("\n")
 
 
 def main():
