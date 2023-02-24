@@ -174,7 +174,7 @@ class ConnectionMonit:
                     self.last_con_status_time = t
                     self.status_thread_last_check = t
                     self.last_con_status['meta.time_check'] = t
-                    self.last_con_status['meta.dt_check'] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+                    self.last_con_status['meta.dt_check'] = datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
                     try_fnc(lambda: self.on_new_conn_state(self.last_con_status))
 
                 except Exception as e:
@@ -300,7 +300,7 @@ class ConnectionMonit:
         self.asyncWorker.enqueue_on_main(self.send_telegram_notif(notif), self.main_loop)
 
     def add_log(self, msg, mtype='-'):
-        time_fmt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        time_fmt = datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
         time_now = time.time()
 
         self.event_log_deque.append({
@@ -345,7 +345,7 @@ class ConnectionMonit:
             txt_msg = f'Conn state report [age={"%.2f" % t_diff}]: \n{report_extended}'
             self.send_telegram_notif_on_main(txt_msg)
             if do_report and self.do_email_reports:
-                self.notify_via_email_async(txt_msg, f'Conn change {datetime.now().strftime("%m/%d/%Y, %H:%M:%S")}')
+                self.notify_via_email_async(txt_msg, f'Conn change {datetime.now().strftime("%Y-%m-%d, %H:%M:%S")}')
             self.time_last_report = t
 
     def notify_via_email_async(self, txt_message: str, subject: str):
@@ -440,7 +440,7 @@ class ConnectionMonit:
         return "\n".join(acc)
 
     def add_log_rec(self, rec):
-        time_fmt = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        time_fmt = datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
         time_now = time.time()
         return self.add_log_line(json.dumps({
             'time': time_now,
