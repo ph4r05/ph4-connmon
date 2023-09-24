@@ -1,9 +1,7 @@
-import sys
-
 from setuptools import setup
 from setuptools import find_packages
 
-version = '0.0.5'
+version = '0.0.6'
 
 # Please update tox.ini when modifying dependency version requirements
 install_requires = [
@@ -17,7 +15,7 @@ install_requires = [
     'requests',
     'jsonpath_ng',
     'PyJWT==2.6.0',
-    'ph4-monitlib>=0.0.3',
+    'ph4-monitlib>=0.0.6',
 ]
 
 dev_extras = [

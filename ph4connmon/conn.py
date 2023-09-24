@@ -17,10 +17,11 @@ from datetime import datetime
 from typing import List
 
 import coloredlogs
-from ph4monitlib import jsonpath, defvalkey
+from ph4monitlib import jsonpath, defvalkey, coalesce
 from ph4monitlib.net import test_port_open, is_port_listening
 from ph4monitlib.notif import NotifyEmail
 from ph4monitlib.tbot import TelegramBot
+from ph4monitlib.utils import load_config_file
 from ph4monitlib.worker import Worker, AsyncWorker
 from ph4runner import install_sarge_filter, try_fnc
 from telegram import Update
@@ -45,7 +46,7 @@ class ConnectionMonit:
         self.worker = Worker(running_fnc=lambda: self.is_running)
         self.asyncWorker = AsyncWorker(running_fnc=lambda: self.is_running)
         self.notifier_email = NotifyEmail()
-        self.notifier_telegram = TelegramBot()
+        self.notifier_telegram = TelegramBot(timeout=15)
 
         self.main_loop = None
         self.status_thread = None
@@ -87,13 +88,14 @@ class ConnectionMonit:
             return
 
         try:
-            with open(self.args.config) as fh:
-                dt = fh.read()
-                self.config = json.loads(dt)
+            self.config = load_config_file(self.args.config)
 
             bot_apikey = jsonpath('$.bot_apikey', self.config, True)
             if not self.notifier_telegram.bot_apikey:
                 self.notifier_telegram.bot_apikey = bot_apikey
+
+            bot_enabled = coalesce(jsonpath('$.bot_enabled', self.config, True), True)
+            self.notifier_telegram.disabled = not bot_enabled
 
             allowed_usernames = jsonpath('$.allowed_usernames', self.config, True)
             if allowed_usernames:
@@ -221,7 +223,12 @@ class ConnectionMonit:
             self.init_signals()
             self.start_worker_thread()
             self.start_status_thread()
-            await self.start_bot_async()
+
+            try:
+                await self.start_bot_async()
+            except Exception as e:
+                self.notifier_telegram.disabled = True
+                logger.error(f'Could not start telegram bot: {e}')
 
             if self.start_error:
                 logger.error(f'Cannot continue, start error: {self.start_error}')
